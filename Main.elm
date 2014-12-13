@@ -52,30 +52,34 @@ port loadIndex : Signal.Signal String
 
 header : Html.Html
 header =
-  div [] [
-    ul [] [
-      li [] [ linkToRoute "Home" index indexRoute ]
+  div []
+  [ ul []
+    [ li [] [ linkToRoute "Home" index indexRoute ]
     , li [] [ linkToRoute "Posts" postIndex postsRoute ]
     , li [] [ linkTo "About" "/about" ]
     , li [] [ linkTo "Colophon" "/colophon" ]
-    ] ]
+    ]
+  , div []
+    [ h1 [] [text "Welcome to this Website!"]
+    ]
+  ]
 
 body : Signal.Signal Html.Html
 body =
   Signal.map (\v ->
     div [] [
       v
-    ]) <| Signal.mergeMany [postsView, containerView]
+    ]) <| Signal.mergeMany [postsIndexView, indexView]
 
-containerView : Signal.Signal Html.Html
-containerView = Signal.map renderContainer (listenForRoute postsRoute loadIndex)
+indexView : Signal.Signal Html.Html
+indexView = Signal.map renderIndex (listenForRoute postsRoute loadIndex)
 
-renderContainer s = h1 [] [text "This is a website!"]
+renderIndex s = h2 [] [text "This is index!"]
 
-postsView : Signal.Signal Html.Html
-postsView = Signal.map renderPosts (listenForRoute indexRoute loadPostIndex)
+postsIndexView : Signal.Signal Html.Html
+postsIndexView = Signal.map renderPostsIndex (listenForRoute indexRoute loadPostIndex)
 
-renderPosts s = div [] [
+renderPostsIndex s = div [] [
     h2 [] [text "This is posts!"]
   ]
 
