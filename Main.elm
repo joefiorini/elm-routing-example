@@ -30,10 +30,10 @@ main = Signal.map (Html.toElement 1000 1000) container
 
 container : Signal Html.Html
 container =
-  renderTopLevel (\v ->
+  renderTopLevel (\outlet ->
     div [class "container"]
       [ header
-      , v
+      , outlet
       ])
     [ Routes.indexRoute                   <~ Home.view
     , (Routes.postsRoute, Posts.children) <@~ Posts.view
