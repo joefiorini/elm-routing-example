@@ -2,6 +2,7 @@ import Html
 import Html (div, p, text, ul, a, li, h1, h2)
 import Html.Attributes (href)
 import Html.Events (onClick)
+import List ((::))
 import List as List
 import Dict as Dict
 import Debug as Debug
@@ -49,6 +50,8 @@ aboutRoute = "about"
 
 colophonRoute : RouteHandler
 colophonRoute = "colophon"
+
+postsRoute = "posts"
 
 postsIndexRoute : RouteHandler
 postsIndexRoute = "postsIndex"
@@ -175,6 +178,15 @@ renderRoutes = Signal.mergeMany [renderIndex, renderPosts, renderAbout, renderCo
 render : Html.Html -> RouteHandler -> Signal Html.Html
 render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
 
+findOutlet parent h =
+  Debug.log "findOutlet" (if h == "" then (\_ -> text "") else parent)
+
+renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
+renderOutlet parent (handler, children) =
+  let outletS = Signal.map (findOutlet parent) (onRoute handler) in
+  -- outletS : Signal (Html.Html -> Html.Html)
+    Signal.map2 (\p v -> Debug.log "renderOutlet" p v) outletS <| Signal.mergeMany children
+
 renderM : (JsonD.Value -> Html.Html) -> RouteHandler -> Signal Html.Html
 renderM view handler = Signal.map (\(h,m) -> if h == "" then text "" else view m) (onRouteM handler)
 
@@ -184,7 +196,14 @@ onRoute handler = Signal.keepIf ((==) handler) "" routeChangeP
 onRouteM : RouteHandler -> Signal RouteHandlerM
 onRouteM handler = Signal.keepIf (\(h,_) -> h == handler) ("",Json.null) routeChangePM
 
-renderPosts = Signal.mergeMany [renderPostsIndex, renderPostsShow]
+renderPosts : Signal Html.Html
+renderPosts =
+  renderOutlet postsOutlet (postsRoute, [renderPostsIndex, renderPostsShow])
+
+postsOutlet : Html.Html -> Html.Html
+postsOutlet outlet =
+  div []
+    [ h2 [] [text "Posts"], outlet ]
 
 renderIndex = render (h2 [] [text "This is index!"]) indexRoute
 
@@ -234,7 +253,7 @@ renderPostsShow = renderM (\postJ ->
     ) "postsShow"
 
 postUrl : Post -> String
-postUrl p = "/posts" ++ (toString p.id)
+postUrl p = "/posts/" ++ p.id
 
 postToJson : Post -> Json.Value
 postToJson p =

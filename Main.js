@@ -23,40 +23,55 @@ window.app = (function() {
 
     document.addEventListener('click', function(e) {
       e.preventDefault();
+
+      if(typeof e.target.href !== "undefined") {
+        var url = e.target.href.replace(window.location.origin, "");
+        console.log("updateURL", url);
+        api.updateURL(url);
+      }
+
     });
 
-    app.ports.visitRouteP.subscribe(function(handler) {
-      var route = router.recognizer.generate(handler);
-      api.updateURL(route);
-    });
+    // app.ports.visitRouteP.subscribe(function(handler) {
+    //   console.log("visitRouteM", handler);
+    //   var route = router.recognizer.generate(handler);
+    //   api.updateURL(route);
+    // });
 
-    app.ports.visitRouteMP.subscribe(function(handlerM) {
-      var handlerName = handlerM[0],
-          state = handlerM[1];
+    // app.ports.visitRouteMP.subscribe(function(handlerM) {
+    //   console.log("visitRouteMP", handlerM[0], handlerM[1]);
+    //   var handlerName = handlerM[0],
+    //       state = handlerM[1];
 
-      var route = router.generate(handlerName, state);
+    //   var route = router.generate(handlerName, state);
 
-      api.updateURL(route);
-    });
+    //   api.updateURL(route);
+    // });
 
     router.map(function(match) {
       match("/").to("index");
       match("/about").to("about");
       match("/colophon").to("colophon");
-      match("/posts").to("postsIndex");
-      match("/posts/:id").to("postsShow");
+      match("/posts").to("posts", function(match) {
+        match("/").to("postsIndex");
+        match("/:id").to("postsShow");
+      });
     });
 
+    var handlers = {};
+
     function defaultHandler(handlerName) {
+      console.log("defaultHandler for", handlerName);
       return {
         model: function(s) {
-          return s;
+          console.log("model for handler", handlerName, s, typeof s);
+          return RSVP.resolve(s);
         },
         serialize: function(s) {
           return {id: s.id};
         },
         setup: function(model) {
-          if(Object.keys(model).length > 0) {
+          if(model && Object.keys(model).length > 0) {
             console.log("sending routeChangePM: ", handlerName);
             app.ports.routeChangePM.send([handlerName, model]);
           } else {
@@ -68,7 +83,11 @@ window.app = (function() {
     }
 
     router.getHandler = function(name) {
-      return defaultHandler(name);
+      if(handlers[name] !== undefined) {
+        return handlers[name];
+      } else {
+        return defaultHandler(name);
+      }
     };
 
     api.watchURLChanges(function(url) {
