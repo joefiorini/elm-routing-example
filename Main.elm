@@ -69,6 +69,18 @@ linkToRoute' title url routeC =
     ]
     [ text title ]
 
+visitRoute : RouteHandler -> Signal.Message
+visitRoute handler = Signal.send routeChannel handler
+
+routeChannel : Signal.Channel RouteHandler
+routeChannel = Signal.channel "noop"
+
+routeChannelM : Signal.Channel RouteHandlerM
+routeChannelM = Signal.channel ("noop", Json.null)
+
+visitRouteM : RouteHandlerM -> Signal.Message
+visitRouteM handler = Signal.send routeChannelM handler
+
 -------- IMPLEMENTATION --------
 
 type alias Post =
@@ -201,18 +213,6 @@ postToJson p =
     , ("title", Json.string p.title)
     , ("body", Json.string p.body)
     ]
-
-visitRoute : RouteHandler -> Signal.Message
-visitRoute handler = Signal.send routeChannel handler
-
-routeChannel : Signal.Channel RouteHandler
-routeChannel = Signal.channel "noop"
-
-routeChannelM : Signal.Channel RouteHandlerM
-routeChannelM = Signal.channel ("noop", Json.null)
-
-visitRouteM : RouteHandlerM -> Signal.Message
-visitRouteM handler = Signal.send routeChannelM handler
 
 postsShowRoute : Post -> RouteHandlerM
 postsShowRoute post = ("postsShow", postToJson post)
