@@ -26,20 +26,6 @@ type alias RouteParams = Dict.Dict (String, String)
 type alias RouteHandler = String
 type alias RouteHandlerM = (RouteHandler, Json.Value)
 
-indexRoute : RouteHandler
-indexRoute = "index"
-
-aboutRoute : RouteHandler
-aboutRoute = "about"
-
-colophonRoute : RouteHandler
-colophonRoute = "colophon"
-
-postsRoute = "posts"
-
-postsIndexRoute : RouteHandler
-postsIndexRoute = "postsIndex"
-
 render : Html.Html -> RouteHandler -> Signal Html.Html
 render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
 
@@ -90,6 +76,20 @@ type alias Post =
   , title : String
   , body : String
   }
+
+indexRoute : RouteHandler
+indexRoute = "index"
+
+aboutRoute : RouteHandler
+aboutRoute = "about"
+
+colophonRoute : RouteHandler
+colophonRoute = "colophon"
+
+postsRoute = "posts"
+
+postsIndexRoute : RouteHandler
+postsIndexRoute = "postsIndex"
 
 view : Signal.Signal Html.Html
 view = Signal.map (\v -> div [] [header, v]) body
