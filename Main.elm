@@ -278,11 +278,18 @@ visitRouteM handler = Signal.send routeChannelM handler
 linkTo : String -> String -> Html.Html
 linkTo title url = a [ href url ] [ text title ]
 
-linkToC : String -> String -> Signal.Message -> Html.Html
-linkToC title url m =
+linkToRouteM : String -> String -> RouteHandlerM -> Html.Html
+linkToRouteM title url route =
+  linkToRoute' title url <| visitRouteM route
+
+linkToRoute : String -> String -> RouteHandler -> Html.Html
+linkToRoute title url route =
+    linkToRoute' title url <| visitRoute route
+
+linkToRoute' title url routeC =
   a
     [ href url
-    , onClick m
+    , onClick routeC
     ]
     [ text title ]
 
@@ -291,23 +298,23 @@ postsShowRoute post = ("postsShow", postToJson post)
 
 linkToHome : String -> Html.Html
 linkToHome title =
-  linkToC title "/" (visitRoute indexRoute)
+  linkToRoute title "/" indexRoute
 
 linkToPosts : String -> Html.Html
 linkToPosts  title =
-  linkToC title "/posts" (visitRoute postsIndexRoute)
+  linkToRoute title "/posts" postsIndexRoute
 
 linkToAbout : String -> Html.Html
 linkToAbout title =
-  linkToC title "/about" (visitRoute aboutRoute)
+  linkToRoute title "/about" aboutRoute
 
 linkToColophon : String -> Html.Html
 linkToColophon title =
-  linkToC title "/colophon" (visitRoute colophonRoute)
+  linkToRoute title "/colophon" colophonRoute
 
 linkToPost : String -> Post -> Html.Html
 linkToPost title post =
-  linkToC title (postUrl post) (visitRouteM <| postsShowRoute post)
+  linkToRouteM title (postUrl post) (postsShowRoute post)
 
 -- linkToRoute : String -> s -> Route -> Html.Html
 -- linkToRoute title state route =
