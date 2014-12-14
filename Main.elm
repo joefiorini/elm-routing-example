@@ -23,25 +23,9 @@ type RouteState = NoState
 type alias Url = String
 
 type alias RouteParams = Dict.Dict (String, String)
--- type alias RouteHandler h s =
---   { h | serialize: s -> Route -> RouteParams }
 type alias RouteHandler = String
 type alias RouteHandlerM = (RouteHandler, Json.Value)
 
--- routeParams : List (String, String) -> RouteParams
--- routeParams = Dict.fromList
-
--- routeHandler = { serialize = identity }
--- defaultRouteHandler = routeHandler {} NoState
--- defaultRouteHandlerState s = routeHandler {} s
-
--- type Route h s = UrlRoute String Url (RouteHandler h s)
-
--- visitRoute : Signal.Channel (Route,s)
--- visitRoute = Signal.channel (indexRoute,NoState)
-
--- indexRoute : Route
--- indexRoute = { url = "/" }
 indexRoute : RouteHandler
 indexRoute = "index"
 
@@ -56,9 +40,6 @@ postsRoute = "posts"
 postsIndexRoute : RouteHandler
 postsIndexRoute = "postsIndex"
 
--- routeToJson : Route -> Json.Value
--- routeToJson route = Json.object [ ("url", Json.string route.url) ]
-
 render : Html.Html -> RouteHandler -> Signal Html.Html
 render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
 
@@ -68,7 +49,6 @@ findOutlet parent h =
 renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
 renderOutlet parent (handler, children) =
   let outletS = Signal.map (findOutlet parent) (onRoute handler) in
-  -- outletS : Signal (Html.Html -> Html.Html)
     Signal.map2 (\p v -> Debug.log "renderOutlet" p v) outletS <| Signal.mergeMany children
 
 renderTopLevel : (Html.Html -> Html.Html) -> List (Signal Html.Html) -> Signal Html.Html
@@ -85,6 +65,24 @@ onRoute handler = Signal.keepIf ((==) handler) "" routeChangeP
 onRouteM : RouteHandler -> Signal RouteHandlerM
 onRouteM handler = Signal.keepIf (\(h,_) -> h == handler) ("",Json.null) routeChangePM
 
+linkTo : String -> String -> Html.Html
+linkTo title url = a [ href url ] [ text title ]
+
+linkToRouteM : String -> String -> RouteHandlerM -> Html.Html
+linkToRouteM title url route =
+  linkToRoute' title url <| visitRouteM route
+
+linkToRoute : String -> String -> RouteHandler -> Html.Html
+linkToRoute title url route =
+    linkToRoute' title url <| visitRoute route
+
+linkToRoute' title url routeC =
+  a
+    [ href url
+    , onClick routeC
+    ]
+    [ text title ]
+
 -------- IMPLEMENTATION --------
 
 type alias Post =
@@ -93,38 +91,13 @@ type alias Post =
   , body : String
   }
 
--- serializePost : Post -> RouteParams
--- serializePost p = routeParams ("id", toString p.id)
-
--- type alias PostsRoute = RouteHandler {} (List Post)
-
--- postsRoute : PostsRoute
--- postsRoute = routeHandler
-
--- postsShowRoute : RouteHandler {} Post
--- postsShowRoute =
---   { routeHandler | serialize <- serializePost }
-
 view : Signal.Signal Html.Html
 view = Signal.map (\v -> div [] [header, v]) body
-
--- index = UrlRoute "index" "/" (defaultRouteHandler)
-
--- postsIndex : Route
--- postsIndex = UrlRoute "postsIndex" "/posts" (routeHandler postsRoute)
-
--- postsShow : Route
--- postsShow = UrlRoute "postsShow" "/posts/:id" postsShowRoute
-
--- defaultRoute = index
 
 handleRouteChange : RouteHandler -> RouteHandler -> RouteHandler -> RouteHandler
 handleRouteChange listenRoute oldRoute newRoute =
       if | newRoute == listenRoute -> listenRoute
          | otherwise -> oldRoute
-
--- listenForRoute : RouteHandler -> Signal.Signal RouteHandler
--- listenForRoute r = Signal.map (handleRouteChange r) indexRoute routeChangeP
 
 port routeChangeP : Signal.Signal RouteHandler
 port routeChangePM : Signal.Signal RouteHandlerM
@@ -136,9 +109,6 @@ port visitRouteP =
 port visitRouteMP : Signal.Signal RouteHandlerM
 port visitRouteMP =
   Signal.subscribe routeChannelM
-
--- port loadPostIndex : Signal.Signal String
--- port loadIndex : Signal.Signal String
 
 header : Html.Html
 header =
@@ -161,12 +131,6 @@ body =
       v
     ]) [renderIndex, renderPosts, renderAbout, renderColophon]
 
--- viewForRoute : RouteHandler -> Signal Html.Html
--- viewForRoute handler =
---   if | handler == indexRoute -> Debug.log "renderIndex" renderIndex
---      | handler == postsIndexRoute -> Debug.log "renderPostsIndex" renderPostsIndex
---      | otherwise -> text ""
-
 nullPost =
   { id = 0
   , title = ""
@@ -178,25 +142,6 @@ postDecoder : JsonD.Decoder IdGuy
 postDecoder =
   JsonD.object1 IdGuy
     ("id" := JsonD.string)
-    -- ("title" := JsonD.string)
-    -- ("body" := JsonD.string)
-
--- viewForRouteM : RouteHandlerM -> Signal Html.Html
--- viewForRouteM (handler,modelS) =
---   if | handler == "postsShow" ->
---     let modelR = JsonD.decodeValue jsonToPost modelS
---         postViewR = Result.map (Debug.log "renderPostsShow" renderPostsShow) modelR in
---     case postViewR of
---       Result.Ok view -> view
---     | otherwise -> text ""
-
--- renderRoute : RouteHandler -> Signal.Signal Html.Html
--- renderRoute handler =
---   Signal.map2 (\v (h, m) ->
---     if | v == handler -> viewForRoute handler
---        | h == handler -> viewForRouteM (h, m)
---        | otherwise -> text "")
---     routeChangeP routeChangePM
 
 renderPosts : Signal Html.Html
 renderPosts =
@@ -277,24 +222,6 @@ routeChannelM = Signal.channel ("noop", Json.null)
 visitRouteM : RouteHandlerM -> Signal.Message
 visitRouteM handler = Signal.send routeChannelM handler
 
-linkTo : String -> String -> Html.Html
-linkTo title url = a [ href url ] [ text title ]
-
-linkToRouteM : String -> String -> RouteHandlerM -> Html.Html
-linkToRouteM title url route =
-  linkToRoute' title url <| visitRouteM route
-
-linkToRoute : String -> String -> RouteHandler -> Html.Html
-linkToRoute title url route =
-    linkToRoute' title url <| visitRoute route
-
-linkToRoute' title url routeC =
-  a
-    [ href url
-    , onClick routeC
-    ]
-    [ text title ]
-
 postsShowRoute : Post -> RouteHandlerM
 postsShowRoute post = ("postsShow", postToJson post)
 
@@ -317,10 +244,3 @@ linkToColophon title =
 linkToPost : String -> Post -> Html.Html
 linkToPost title post =
   linkToRouteM title (postUrl post) (postsShowRoute post)
-
--- linkToRoute : String -> s -> Route -> Html.Html
--- linkToRoute title state route =
---   a
---     [ href <| serializeRoute state route
---     , onClick (Signal.send visitRoute (route,state))
---     ] [ text title ]
