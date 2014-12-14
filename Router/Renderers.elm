@@ -19,6 +19,8 @@ renderTopLevel : (Html.Html -> Html.Html) -> List (Signal Html.Html) -> Signal H
 renderTopLevel parent children =
     Signal.map (parent) (Signal.mergeMany children)
 
+parent <^~ children = renderTopLevel parent children
+
 renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
 renderOutlet parent (handler, children) =
   let findOutlet parent h = (if h == "" then (\_ -> text "") else parent)
