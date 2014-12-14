@@ -15,11 +15,6 @@ import Signal as Signal
 
 -------- FRAMEWORK -----------
 
-type RouteState = NoState
-
-type alias Url = String
-
-type alias RouteParams = Dict.Dict (String, String)
 type alias RouteHandler = String
 type alias RouteHandlerM = (RouteHandler, Json.Value)
 
@@ -66,11 +61,6 @@ postsRoute = "posts"
 postsIndexRoute = "postsIndex"
 postsShowRoute = "postsShow"
 
-handleRouteChange : RouteHandler -> RouteHandler -> RouteHandler -> RouteHandler
-handleRouteChange listenRoute oldRoute newRoute =
-      if | newRoute == listenRoute -> listenRoute
-         | otherwise -> oldRoute
-
 port routeChangeP : Signal.Signal RouteHandler
 port routeChangePM : Signal.Signal RouteHandlerM
 
@@ -96,12 +86,6 @@ header =
     [ h1 [] [text "Welcome to this Website!"]
     ]
   ]
-
-nullPost =
-  { id = 0
-  , title = ""
-  , body = ""
-  }
 
 type alias IdGuy = {id : String}
 postDecoder : JsonD.Decoder IdGuy
@@ -167,11 +151,3 @@ renderPostsShow = renderM (\postJ ->
 
 postUrl : Post -> String
 postUrl p = "/posts/" ++ p.id
-
-postToJson : Post -> Json.Value
-postToJson p =
-  Json.object
-    [ ("id", Json.string p.id)
-    , ("title", Json.string p.title)
-    , ("body", Json.string p.body)
-    ]
