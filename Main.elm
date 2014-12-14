@@ -54,33 +54,6 @@ onRouteM handler = Signal.keepIf (\(h,_) -> h == handler) ("",Json.null) routeCh
 linkTo : String -> String -> Html.Html
 linkTo title url = a [ href url ] [ text title ]
 
-linkToRouteM : String -> String -> RouteHandlerM -> Html.Html
-linkToRouteM title url route =
-  linkToRoute' title url <| visitRouteM route
-
-linkToRoute : String -> String -> RouteHandler -> Html.Html
-linkToRoute title url route =
-    linkToRoute' title url <| visitRoute route
-
-linkToRoute' title url routeC =
-  a
-    [ href url
-    , onClick routeC
-    ]
-    [ text title ]
-
-visitRoute : RouteHandler -> Signal.Message
-visitRoute handler = Signal.send routeChannel handler
-
-routeChannel : Signal.Channel RouteHandler
-routeChannel = Signal.channel "noop"
-
-routeChannelM : Signal.Channel RouteHandlerM
-routeChannelM = Signal.channel ("noop", Json.null)
-
-visitRouteM : RouteHandlerM -> Signal.Message
-visitRouteM handler = Signal.send routeChannelM handler
-
 -------- IMPLEMENTATION --------
 
 type alias Post =
@@ -94,6 +67,8 @@ aboutRoute = "about"
 colophonRoute = "colophon"
 postsRoute = "posts"
 postsIndexRoute = "postsIndex"
+postsShowRoute = "postsShow"
+
 
 view : Signal.Signal Html.Html
 view = Signal.map (\v -> div [] [header, v]) body
@@ -105,14 +80,6 @@ handleRouteChange listenRoute oldRoute newRoute =
 
 port routeChangeP : Signal.Signal RouteHandler
 port routeChangePM : Signal.Signal RouteHandlerM
-
-port visitRouteP : Signal.Signal RouteHandler
-port visitRouteP =
-  Signal.subscribe routeChannel
-
-port visitRouteMP : Signal.Signal RouteHandlerM
-port visitRouteMP =
-  Signal.subscribe routeChannelM
 
 header : Html.Html
 header =
@@ -201,7 +168,7 @@ renderPostsShow = renderM (\postJ ->
       [ h1 [] [text post.title]
       , p [] [text post.body]
       ]
-    ) "postsShow"
+    ) postsShowRoute
 
 postUrl : Post -> String
 postUrl p = "/posts/" ++ p.id
@@ -214,25 +181,22 @@ postToJson p =
     , ("body", Json.string p.body)
     ]
 
-postsShowRoute : Post -> RouteHandlerM
-postsShowRoute post = ("postsShow", postToJson post)
-
 linkToHome : String -> Html.Html
 linkToHome title =
-  linkToRoute title "/" indexRoute
+  linkTo title "/"
 
 linkToPosts : String -> Html.Html
 linkToPosts  title =
-  linkToRoute title "/posts" postsIndexRoute
+  linkTo title "/posts"
 
 linkToAbout : String -> Html.Html
 linkToAbout title =
-  linkToRoute title "/about" aboutRoute
+  linkTo title "/about"
 
 linkToColophon : String -> Html.Html
 linkToColophon title =
-  linkToRoute title "/colophon" colophonRoute
+  linkTo title "/colophon"
 
 linkToPost : String -> Post -> Html.Html
 linkToPost title post =
-  linkToRouteM title (postUrl post) (postsShowRoute post)
+  linkTo title (postUrl post)
