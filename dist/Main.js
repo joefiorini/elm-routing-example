@@ -7070,8 +7070,12 @@ Elm.Native.Router.make = function(elm) {
 
       console.log("setting up router");
 
-      api.updateURL("/");
-      router.handleURL("/");
+      var currentPath = window.location.pathname;
+      if (currentPath == "/index.html") {
+        api.updateURL("/");
+      }
+
+      router.handleURL(currentPath);
 
       return elm.Native.Router.values = {
         mkRouter: function(id) {
