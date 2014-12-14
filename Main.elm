@@ -59,6 +59,32 @@ postsIndexRoute = "postsIndex"
 -- routeToJson : Route -> Json.Value
 -- routeToJson route = Json.object [ ("url", Json.string route.url) ]
 
+render : Html.Html -> RouteHandler -> Signal Html.Html
+render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
+
+findOutlet parent h =
+  Debug.log "findOutlet" (if h == "" then (\_ -> text "") else parent)
+
+renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
+renderOutlet parent (handler, children) =
+  let outletS = Signal.map (findOutlet parent) (onRoute handler) in
+  -- outletS : Signal (Html.Html -> Html.Html)
+    Signal.map2 (\p v -> Debug.log "renderOutlet" p v) outletS <| Signal.mergeMany children
+
+renderTopLevel : (Html.Html -> Html.Html) -> List (Signal Html.Html) -> Signal Html.Html
+renderTopLevel parent children =
+    Signal.map (\v -> Debug.log "renderOutlet" v) <| Signal.mergeMany children
+
+
+renderM : (JsonD.Value -> Html.Html) -> RouteHandler -> Signal Html.Html
+renderM view handler = Signal.map (\(h,m) -> if h == "" then text "" else view m) (onRouteM handler)
+
+onRoute : RouteHandler -> Signal RouteHandler
+onRoute handler = Signal.keepIf ((==) handler) "" routeChangeP
+
+onRouteM : RouteHandler -> Signal RouteHandlerM
+onRouteM handler = Signal.keepIf (\(h,_) -> h == handler) ("",Json.null) routeChangePM
+
 -------- IMPLEMENTATION --------
 
 type alias Post =
@@ -130,10 +156,10 @@ header =
 
 body : Signal.Signal Html.Html
 body =
-  Signal.map (\v ->
+  renderTopLevel (\v ->
     div [] [
       v
-    ]) renderRoutes
+    ]) [renderIndex, renderPosts, renderAbout, renderColophon]
 
 -- viewForRoute : RouteHandler -> Signal Html.Html
 -- viewForRoute handler =
@@ -164,9 +190,6 @@ postDecoder =
 --       Result.Ok view -> view
 --     | otherwise -> text ""
 
-renderRoutes : Signal Html.Html
-renderRoutes = Signal.mergeMany [renderIndex, renderPosts, renderAbout, renderColophon]
-
 -- renderRoute : RouteHandler -> Signal.Signal Html.Html
 -- renderRoute handler =
 --   Signal.map2 (\v (h, m) ->
@@ -174,27 +197,6 @@ renderRoutes = Signal.mergeMany [renderIndex, renderPosts, renderAbout, renderCo
 --        | h == handler -> viewForRouteM (h, m)
 --        | otherwise -> text "")
 --     routeChangeP routeChangePM
-
-render : Html.Html -> RouteHandler -> Signal Html.Html
-render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
-
-findOutlet parent h =
-  Debug.log "findOutlet" (if h == "" then (\_ -> text "") else parent)
-
-renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
-renderOutlet parent (handler, children) =
-  let outletS = Signal.map (findOutlet parent) (onRoute handler) in
-  -- outletS : Signal (Html.Html -> Html.Html)
-    Signal.map2 (\p v -> Debug.log "renderOutlet" p v) outletS <| Signal.mergeMany children
-
-renderM : (JsonD.Value -> Html.Html) -> RouteHandler -> Signal Html.Html
-renderM view handler = Signal.map (\(h,m) -> if h == "" then text "" else view m) (onRouteM handler)
-
-onRoute : RouteHandler -> Signal RouteHandler
-onRoute handler = Signal.keepIf ((==) handler) "" routeChangeP
-
-onRouteM : RouteHandler -> Signal RouteHandlerM
-onRouteM handler = Signal.keepIf (\(h,_) -> h == handler) ("",Json.null) routeChangePM
 
 renderPosts : Signal Html.Html
 renderPosts =
