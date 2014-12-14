@@ -77,18 +77,10 @@ type alias Post =
   , body : String
   }
 
-indexRoute : RouteHandler
 indexRoute = "index"
-
-aboutRoute : RouteHandler
 aboutRoute = "about"
-
-colophonRoute : RouteHandler
 colophonRoute = "colophon"
-
 postsRoute = "posts"
-
-postsIndexRoute : RouteHandler
 postsIndexRoute = "postsIndex"
 
 view : Signal.Signal Html.Html
