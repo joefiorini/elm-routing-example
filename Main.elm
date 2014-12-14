@@ -1,6 +1,6 @@
 import Html
 import Html (div, p, text, ul, a, li, h1, h2)
-import Html.Attributes (href)
+import Html.Attributes (href, class)
 import Html.Events (onClick)
 import List ((::))
 import List as List
@@ -28,7 +28,7 @@ render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRo
 
 renderTopLevel : (Html.Html -> Html.Html) -> List (Signal Html.Html) -> Signal Html.Html
 renderTopLevel parent children =
-    Signal.map (\v -> Debug.log "renderOutlet" v) <| Signal.mergeMany children
+    Signal.map (parent) (Signal.mergeMany children)
 
 renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
 renderOutlet parent (handler, children) =
@@ -51,7 +51,7 @@ linkTo title url = a [ href url ] [ text title ]
 -------- IMPLEMENTATION --------
 
 main : Signal.Signal Element
-main = Signal.map (\v -> Html.toElement 1000 1000 v) view
+main = Signal.map (Html.toElement 1000 1000) container
 
 type alias Post =
   { id : String
@@ -66,9 +66,6 @@ postsRoute = "posts"
 postsIndexRoute = "postsIndex"
 postsShowRoute = "postsShow"
 
-view : Signal.Signal Html.Html
-view = Signal.map (\v -> div [] [header, v]) body
-
 handleRouteChange : RouteHandler -> RouteHandler -> RouteHandler -> RouteHandler
 handleRouteChange listenRoute oldRoute newRoute =
       if | newRoute == listenRoute -> listenRoute
@@ -77,26 +74,28 @@ handleRouteChange listenRoute oldRoute newRoute =
 port routeChangeP : Signal.Signal RouteHandler
 port routeChangePM : Signal.Signal RouteHandlerM
 
+container : Signal Html.Html
+container =
+  renderTopLevel (\v ->
+    div [class "container"]
+      [ header
+      , v
+      ])
+    [renderIndex, renderPosts, renderAbout, renderColophon]
+
 header : Html.Html
 header =
-  div []
+  Html.node "header" []
   [ ul []
-    [ li [] [ linkToHome "Home" ]
-    , li [] [ linkToPosts "Posts" ]
-    , li [] [ linkToAbout "About" ]
-    , li [] [ linkToColophon "Colophon" ]
+    [ li [] [ linkTo "Home" "/" ]
+    , li [] [ linkTo "Posts" "/posts" ]
+    , li [] [ linkTo "About" "/about" ]
+    , li [] [ linkTo "Colophon" "/colophon" ]
     ]
   , div []
     [ h1 [] [text "Welcome to this Website!"]
     ]
   ]
-
-body : Signal.Signal Html.Html
-body =
-  renderTopLevel (\v ->
-    div [] [
-      v
-    ]) [renderIndex, renderPosts, renderAbout, renderColophon]
 
 nullPost =
   { id = 0
@@ -116,16 +115,16 @@ renderPosts =
 
 postsOutlet : Html.Html -> Html.Html
 postsOutlet outlet =
-  div []
+  div [class "posts-outlet"]
     [ h2 [] [text "Posts"], outlet ]
 
-renderIndex = render (h2 [] [text "This is index!"]) indexRoute
+renderIndex = render (h2 [class "index"] [text "This is index!"]) indexRoute
 
 renderAbout =
-  render (h2 [] [text "About me", p [] [text "I'm awesome."]]) aboutRoute
+  render (h2 [] [text "About me", p [class "about"] [text "I'm awesome."]]) aboutRoute
 
 renderColophon =
-  render (h2 [] [text "Colophon", p [] [text "Made with Elm, Ember and Aliens."]]) colophonRoute
+  render (h2 [] [text "Colophon", p [class "colophon"] [text "Made with Elm, Ember and Aliens."]]) colophonRoute
 
 posts : List {title:String,body:String,id:String}
 posts =
@@ -139,13 +138,13 @@ posts =
     }
   ]
 
-renderPostsIndex = render (div [] [
+renderPostsIndex = render (div [class "posts-listing"] [
     h2 [] (List.map renderPostPreview posts)
   ]) postsIndexRoute
 
 renderPostPreview post =
-  div []
-  [ linkToPost post.title post
+  div [class "post-preview"]
+  [ linkTo post.title (postUrl post)
   ]
 
 jsonToPost : JsonD.Value -> Post
@@ -160,7 +159,7 @@ jsonToPost value =
 
 renderPostsShow = renderM (\postJ ->
   let post = jsonToPost postJ in
-    div []
+    div [class "post"]
       [ h1 [] [text post.title]
       , p [] [text post.body]
       ]
@@ -176,23 +175,3 @@ postToJson p =
     , ("title", Json.string p.title)
     , ("body", Json.string p.body)
     ]
-
-linkToHome : String -> Html.Html
-linkToHome title =
-  linkTo title "/"
-
-linkToPosts : String -> Html.Html
-linkToPosts  title =
-  linkTo title "/posts"
-
-linkToAbout : String -> Html.Html
-linkToAbout title =
-  linkTo title "/about"
-
-linkToColophon : String -> Html.Html
-linkToColophon title =
-  linkTo title "/colophon"
-
-linkToPost : String -> Post -> Html.Html
-linkToPost title post =
-  linkTo title (postUrl post)
