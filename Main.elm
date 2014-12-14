@@ -13,9 +13,6 @@ import Json.Decode as JsonD
 import Graphics.Element (Element)
 import Signal as Signal
 
-main : Signal.Signal Element
-main = Signal.map (\v -> Html.toElement 1000 1000 v) view
-
 -------- FRAMEWORK -----------
 
 type RouteState = NoState
@@ -29,18 +26,15 @@ type alias RouteHandlerM = (RouteHandler, Json.Value)
 render : Html.Html -> RouteHandler -> Signal Html.Html
 render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
 
-findOutlet parent h =
-  Debug.log "findOutlet" (if h == "" then (\_ -> text "") else parent)
-
-renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
-renderOutlet parent (handler, children) =
-  let outletS = Signal.map (findOutlet parent) (onRoute handler) in
-    Signal.map2 (\p v -> Debug.log "renderOutlet" p v) outletS <| Signal.mergeMany children
-
 renderTopLevel : (Html.Html -> Html.Html) -> List (Signal Html.Html) -> Signal Html.Html
 renderTopLevel parent children =
     Signal.map (\v -> Debug.log "renderOutlet" v) <| Signal.mergeMany children
 
+renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
+renderOutlet parent (handler, children) =
+  let findOutlet parent h = (if h == "" then (\_ -> text "") else parent)
+      outletS = Signal.map (findOutlet parent) (onRoute handler) in
+    Signal.map2 (\p v -> Debug.log "renderOutlet" p v) outletS <| Signal.mergeMany children
 
 renderM : (JsonD.Value -> Html.Html) -> RouteHandler -> Signal Html.Html
 renderM view handler = Signal.map (\(h,m) -> if h == "" then text "" else view m) (onRouteM handler)
@@ -56,6 +50,9 @@ linkTo title url = a [ href url ] [ text title ]
 
 -------- IMPLEMENTATION --------
 
+main : Signal.Signal Element
+main = Signal.map (\v -> Html.toElement 1000 1000 v) view
+
 type alias Post =
   { id : String
   , title : String
@@ -68,7 +65,6 @@ colophonRoute = "colophon"
 postsRoute = "posts"
 postsIndexRoute = "postsIndex"
 postsShowRoute = "postsShow"
-
 
 view : Signal.Signal Html.Html
 view = Signal.map (\v -> div [] [header, v]) body
