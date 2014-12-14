@@ -41,6 +41,8 @@ window.app = (function() {
 
     router.map(function(match) {
       match("/").to("index");
+      match("/about").to("about");
+      match("/colophon").to("colophon");
       match("/posts").to("postsIndex");
       match("/posts/:id").to("postsShow");
     });

@@ -12,8 +12,6 @@ import Json.Decode as JsonD
 import Graphics.Element (Element)
 import Signal as Signal
 
-import Native.Router as Router
-
 main : Signal.Signal Element
 main = Signal.map (\v -> Html.toElement 1000 1000 v) view
 
@@ -45,6 +43,12 @@ type alias RouteHandlerM = (RouteHandler, Json.Value)
 -- indexRoute = { url = "/" }
 indexRoute : RouteHandler
 indexRoute = "index"
+
+aboutRoute : RouteHandler
+aboutRoute = "about"
+
+colophonRoute : RouteHandler
+colophonRoute = "colophon"
 
 postsIndexRoute : RouteHandler
 postsIndexRoute = "postsIndex"
@@ -113,8 +117,8 @@ header =
   [ ul []
     [ li [] [ linkToHome "Home" ]
     , li [] [ linkToPosts "Posts" ]
-    , li [] [ linkTo "About" "/about" ]
-    , li [] [ linkTo "Colophon" "/colophon" ]
+    , li [] [ linkToAbout "About" ]
+    , li [] [ linkToColophon "Colophon" ]
     ]
   , div []
     [ h1 [] [text "Welcome to this Website!"]
@@ -158,7 +162,7 @@ postDecoder =
 --     | otherwise -> text ""
 
 renderRoutes : Signal Html.Html
-renderRoutes = Signal.mergeMany [renderIndex, renderPosts]
+renderRoutes = Signal.mergeMany [renderIndex, renderPosts, renderAbout, renderColophon]
 
 -- renderRoute : RouteHandler -> Signal.Signal Html.Html
 -- renderRoute handler =
@@ -183,6 +187,12 @@ onRouteM handler = Signal.keepIf (\(h,_) -> h == handler) ("",Json.null) routeCh
 renderPosts = Signal.mergeMany [renderPostsIndex, renderPostsShow]
 
 renderIndex = render (h2 [] [text "This is index!"]) indexRoute
+
+renderAbout =
+  render (h2 [] [text "About me", p [] [text "I'm awesome."]]) aboutRoute
+
+renderColophon =
+  render (h2 [] [text "Colophon", p [] [text "Made with Elm, Ember and Aliens."]]) colophonRoute
 
 posts : List {title:String,body:String,id:String}
 posts =
@@ -257,24 +267,24 @@ linkToC title url m =
     ]
     [ text title ]
 
-linkToHome : String -> Html.Html
-linkToHome title =
-  a
-    [ href "/"
-    , onClick (visitRoute "index")
-    ]
-    [ text title ]
-
-linkToPosts : String -> Html.Html
-linkToPosts title =
-  a
-    [ href "/posts"
-    , onClick (visitRoute "postsIndex")
-    ]
-    [ text title ]
-
 postsShowRoute : Post -> RouteHandlerM
 postsShowRoute post = ("postsShow", postToJson post)
+
+linkToHome : String -> Html.Html
+linkToHome title =
+  linkToC title "/" (visitRoute indexRoute)
+
+linkToPosts : String -> Html.Html
+linkToPosts  title =
+  linkToC title "/posts" (visitRoute postsIndexRoute)
+
+linkToAbout : String -> Html.Html
+linkToAbout title =
+  linkToC title "/about" (visitRoute aboutRoute)
+
+linkToColophon : String -> Html.Html
+linkToColophon title =
+  linkToC title "/colophon" (visitRoute colophonRoute)
 
 linkToPost : String -> Post -> Html.Html
 linkToPost title post =
