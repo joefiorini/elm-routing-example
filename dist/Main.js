@@ -4061,12 +4061,14 @@ Elm.Main.make = function (_elm) {
                               ,_1: $Router$Types.Handler("colophon")}
                              ,{ctor: "_Tuple2"
                               ,_0: "/posts"
-                              ,_1: $Router$Types.NestedHandler(_L.fromArray([{ctor: "_Tuple2"
-                                                                             ,_0: "/"
-                                                                             ,_1: $Router$Types.Handler("postsIndex")}
-                                                                            ,{ctor: "_Tuple2"
-                                                                             ,_0: "/:id"
-                                                                             ,_1: $Router$Types.Handler("postsShow")}]))}]);
+                              ,_1: A2($Router$Types.NestedHandler,
+                              "posts",
+                              _L.fromArray([{ctor: "_Tuple2"
+                                            ,_0: "/"
+                                            ,_1: $Router$Types.Handler("postsIndex")}
+                                           ,{ctor: "_Tuple2"
+                                            ,_0: "/:id"
+                                            ,_1: $Router$Types.Handler("postsShow")}]))}]);
    var main = $Signal.map(A2($Html.toElement,
    1000,
    1000))(A2($Router.embedRouter,
@@ -7011,6 +7013,7 @@ Elm.Native.Router.make = function(elm) {
 
     var elmRouter = Elm.Router.Watchers.make(elm);
     var Utils = Elm.Native.Utils.make(elm);
+    var List = Elm.Native.List.make(elm);
 
   console.log('making router');
       var router = new Router();
@@ -7038,16 +7041,6 @@ Elm.Native.Router.make = function(elm) {
           api.updateURL(url);
         }
 
-      });
-
-      router.map(function(match) {
-        match("/").to("index");
-        match("/about").to("about");
-        match("/colophon").to("colophon");
-        match("/posts").to("posts", function(match) {
-          match("/").to("postsIndex");
-          match("/:id").to("postsShow");
-        });
       });
 
       var handlers = {};
@@ -7100,14 +7093,37 @@ Elm.Native.Router.make = function(elm) {
 
       router.handleURL(currentPath);
 
+
+      function mapRoute(url, handler, match) {
+        console.log("defining route: ", url, handler);
+        match(url).to(handler);
+      }
+
+      function setupRoutes(routes, match) {
+        List.map(function(route) {
+          if(route._1.ctor === 'Handler') {
+            mapRoute(route._0, route._1._0, match);
+          } else if(route._1.ctor == 'NestedHandler') {
+            match(route._0).to(route._1._0, function(match2) {
+              setupRoutes(route._1._1, match2);
+            });
+          }
+        })(routes);
+      }
+
+      function embedRoutes(container, routes) {
+        router.map(function(match) {
+          setupRoutes(routes, match);
+        });
+        return container;
+      }
+
       return elm.Native.Router.values = {
         mkRouter: function(id) {
           console.log("mkRouter");
           return id;
         },
-        embed: function(routes) {
-          debugger;
-        }
+        embed: F2(embedRoutes)
       };
 };
 
@@ -10940,10 +10956,12 @@ Elm.Router.Types.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "Router.Types",
    $Json$Encode = Elm.Json.Encode.make(_elm);
-   var NestedHandler = function (a) {
+   var NestedHandler = F2(function (a,
+   b) {
       return {ctor: "NestedHandler"
-             ,_0: a};
-   };
+             ,_0: a
+             ,_1: b};
+   });
    var Handler = function (a) {
       return {ctor: "Handler"
              ,_0: a};
