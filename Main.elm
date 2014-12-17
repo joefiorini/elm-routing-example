@@ -22,7 +22,7 @@ import Router (embedRouter)
 import Native.Router
 import Router.Renderers ((<~), (<@~), renderTopLevel)
 import Router.Helpers (linkTo)
-import Router.Types (RouteHandler'(..))
+import Router.Types (RouteHandler(..))
 
 -------- IMPLEMENTATION --------
 

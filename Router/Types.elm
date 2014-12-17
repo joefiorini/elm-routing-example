@@ -3,11 +3,11 @@ module Router.Types where
 import Json.Encode as Json
 
 type alias Url = String
-type alias RouteHandler = String
-type alias RouteHandlerM = (RouteHandler, Json.Value)
+type alias HandlerName = String
+type alias HandlerNameM = (HandlerName, Json.Value)
 
-type alias Route = (Url, RouteHandler')
+type alias Route = (Url, RouteHandler)
 
-type RouteHandler' = Handler RouteHandler
-                   | NestedHandler String (List Route)
+type RouteHandler = Handler HandlerName
+                   | NestedHandler HandlerName (List Route)
 

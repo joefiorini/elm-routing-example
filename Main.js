@@ -7043,16 +7043,6 @@ Elm.Native.Router.make = function(elm) {
 
       });
 
-      // router.map(function(match) {
-      //   match("/").to("index");
-      //   match("/about").to("about");
-      //   match("/colophon").to("colophon");
-      //   match("/posts").to("posts", function(match) {
-      //     match("/").to("postsIndex");
-      //     match("/:id").to("postsShow");
-      //   });
-      // });
-
       var handlers = {};
 
       function defaultHandler(handlerName) {
@@ -7122,16 +7112,6 @@ Elm.Native.Router.make = function(elm) {
       }
 
       function embedRoutes(container, routes) {
-      // router.map(function(match) {
-      //   match("/").to("index");
-      //   match("/about").to("about");
-      //   match("/colophon").to("colophon");
-      //   match("/posts").to("posts", function(match) {
-      //     match("/").to("postsIndex");
-      //     match("/:id").to("postsShow");
-      //   });
-      // });
-
         router.map(function(match) {
           setupRoutes(routes, match);
         });

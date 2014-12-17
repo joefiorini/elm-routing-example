@@ -7,10 +7,10 @@ import Html (text)
 
 import Json.Decode as Json
 
-import Router.Types (RouteHandler, RouteHandlerM)
+import Router.Types (HandlerName, HandlerNameM)
 import Router (onRoute, onRouteM)
 
-render : Html.Html -> RouteHandler -> Signal Html.Html
+render : Html.Html -> HandlerName -> Signal Html.Html
 render view handler = Signal.map (\h -> if h == "" then text "" else view) (onRoute handler)
 
 handler <~ view = render view handler
@@ -21,7 +21,7 @@ renderTopLevel parent children =
 
 parent <^~ children = renderTopLevel parent children
 
-renderOutlet : (Html.Html -> Html.Html) -> (RouteHandler, List (Signal Html.Html)) -> Signal Html.Html
+renderOutlet : (Html.Html -> Html.Html) -> (HandlerName, List (Signal Html.Html)) -> Signal Html.Html
 renderOutlet parent (handler, children) =
   let findOutlet parent h = (if h == "" then (\_ -> text "") else parent)
       outletS = Signal.map (findOutlet parent) (onRoute handler) in
@@ -29,7 +29,7 @@ renderOutlet parent (handler, children) =
 
 children <@~ parent = renderOutlet parent children
 
-renderM : (Json.Value -> Html.Html) -> RouteHandler -> Signal Html.Html
+renderM : (Json.Value -> Html.Html) -> HandlerName -> Signal Html.Html
 renderM view handler = Signal.map (\(h,m) -> if h == "" then text "" else view m) (onRouteM handler)
 
 handler <#~ view = renderM view handler
