@@ -8,6 +8,7 @@ Elm.Native.Router.make = function(elm) {
 
     var elmRouter = Elm.Router.Watchers.make(elm);
     var Utils = Elm.Native.Utils.make(elm);
+    var List = Elm.Native.List.make(elm);
 
   console.log('making router');
       var router = new Router();
@@ -35,16 +36,6 @@ Elm.Native.Router.make = function(elm) {
           api.updateURL(url);
         }
 
-      });
-
-      router.map(function(match) {
-        match("/").to("index");
-        match("/about").to("about");
-        match("/colophon").to("colophon");
-        match("/posts").to("posts", function(match) {
-          match("/").to("postsIndex");
-          match("/:id").to("postsShow");
-        });
       });
 
       var handlers = {};
@@ -97,13 +88,36 @@ Elm.Native.Router.make = function(elm) {
 
       router.handleURL(currentPath);
 
+
+      function mapRoute(url, handler, match) {
+        console.log("defining route: ", url, handler);
+        match(url).to(handler);
+      }
+
+      function setupRoutes(routes, match) {
+        List.map(function(route) {
+          if(route._1.ctor === 'Handler') {
+            mapRoute(route._0, route._1._0, match);
+          } else if(route._1.ctor == 'NestedHandler') {
+            match(route._0).to(route._1._0, function(match2) {
+              setupRoutes(route._1._1, match2);
+            });
+          }
+        })(routes);
+      }
+
+      function embedRoutes(container, routes) {
+        router.map(function(match) {
+          setupRoutes(routes, match);
+        });
+        return container;
+      }
+
       return elm.Native.Router.values = {
         mkRouter: function(id) {
           console.log("mkRouter");
           return id;
         },
-        embed: function(routes) {
-          debugger;
-        }
+        embed: F2(embedRoutes)
       };
 };

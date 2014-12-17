@@ -30,7 +30,7 @@ routes =
   [ ("/", Handler "index")
   , ("/about", Handler "about")
   , ("/colophon", Handler "colophon")
-  , ("/posts", NestedHandler
+  , ("/posts", NestedHandler "posts"
     [ ("/", Handler "postsIndex")
     , ("/:id", Handler "postsShow")
     ])

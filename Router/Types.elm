@@ -9,5 +9,5 @@ type alias RouteHandlerM = (RouteHandler, Json.Value)
 type alias Route = (Url, RouteHandler')
 
 type RouteHandler' = Handler RouteHandler
-                   | NestedHandler (List Route)
+                   | NestedHandler String (List Route)
 
