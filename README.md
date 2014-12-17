@@ -30,9 +30,39 @@ The Native module contains raw JavaScript code using an undocumented Elm feature
 
 ### Defining Routes
 
-At the moment routes are defined in two places. This is a high priority cleanup item before officially releasing as an Elm package.
+A route is a type alias for the following tuple: `(Url, RouteHandler)`. `Url` is currently a type alias for `String` and it represents a URL you want the router to trigger a signal on, for example `"/"` or `"/about"`. [See router.js][routerjs] for more examples of possible URLs.
 
-First, in `Native/Router.js` we use `router.js` to map URLs to named handlers. For example:
+The second parameter of the `Route` type is the `RouteHandler`. At the moment this type has two constructors: `Handler` and `NestedHandler`. `Handler` represents a route that doesn't have any nested states underneath it, for example `"/colophon"`. A `NestedHandler` is a route that contains some substates (see "Nesting Views within Views" below). For example:
+
+```elm
+[ ("/posts", NestedHandler "posts"
+  [  -- Matches /posts and triggers signal with "postsIndex"
+    ("/", Handler "postsIndex")
+
+    -- Matches /posts/1, /posts/2, etc and triggers signal with "postsShow" and the given id
+  , ("/:id", Handler "postsShow")
+  ])
+]
+```
+
+To define these in your app, you can pass a recursive list of `Route` values, along with your top-level container to the `embedRouter` function. For example, if assuming you have a function `routes` defined as:
+
+```elm
+routes =
+  [ ("/", Handler "index")
+  , ("/about", Handler "about)
+  ]
+```
+
+You can tell the router about them in your `main` function like:
+
+```elm
+main = Signal.map (Html.toElement 1000 1000) <| embedRouter container routes
+```
+
+#### Why pass container?
+
+It may seem weird to pass `Html` into the router. We need to do this because of the pure nature of Elm. Defining routes is a side-effect action, but Elm doesn't allow you to call functions that don't compose. If you have trouble remembering, I tend to think of "defining routes" as mapping states of your application to the DOM that is rendered (URLs are just a handy way to return to those states). Therefore, you can think of this as "embedding" the router in your DOM, hence the name `embedRoutes`.
 
 ```javascript
 router.map(function(match) {
