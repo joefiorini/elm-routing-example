@@ -2,6 +2,16 @@
 
 An example showing my approach to Ember-inspired client-side routing in Elm. Uses [router.js](http://github.com/tildio/router.js).
 
+## Todo
+
+This library is work in progress. Here is the progress thus far. Is there something I'm missing here? Please feel free to open an issue to discuss it.
+
+- [x] Basic example showing nesting & listening for routes
+- [x] Ability to define routes in Elm instead of hardcoding
+- [ ] Auto generating links instead of hardcoding URLs
+- [ ] Browserify build setup to include vendor code in final output
+- [ ] Create & push Elm package
+
 ## Modules
 
 ### Router
@@ -63,22 +73,6 @@ main = Signal.map (Html.toElement 1000 1000) <| embedRouter container routes
 #### Why pass container?
 
 It may seem weird to pass `Html` into the router. We need to do this because of the pure nature of Elm. Defining routes is a side-effect action, but Elm doesn't allow you to call functions that don't compose. If you have trouble remembering, I tend to think of "defining routes" as mapping states of your application to the DOM that is rendered (URLs are just a handy way to return to those states). Therefore, you can think of this as "embedding" the router in your DOM, hence the name `embedRoutes`.
-
-```javascript
-router.map(function(match) {
-  match("/").to("index");
-  match("/about").to("about");
-  match("/colophon").to("colophon");
-  match("/posts").to("posts", function(match) {
-    match("/").to("postsIndex");
-    match("/:id").to("postsShow");
-  });
-});
-```
-
-Then in `Routes.elm` we define functions that return the name of each route handler. We'll use these in a bit.
-
-Notice we do not define URL-to-route mappings in Elm. Eventually I'd like to have an API for defining these mappings entirely in Elm.
 
 ### Mapping Routes to Views
 
