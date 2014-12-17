@@ -3986,11 +3986,14 @@ Elm.Main.make = function (_elm) {
    _L = _N.List.make(_elm),
    _P = _N.Ports.make(_elm),
    $moduleName = "Main",
+   $Basics = Elm.Basics.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Router = Elm.Router.make(_elm),
    $Router$Helpers = Elm.Router.Helpers.make(_elm),
    $Router$Renderers = Elm.Router.Renderers.make(_elm),
+   $Router$Types = Elm.Router.Types.make(_elm),
    $Routes = Elm.Routes.make(_elm),
    $Screens$About = Elm.Screens.About.make(_elm),
    $Screens$Colophon = Elm.Screens.Colophon.make(_elm),
@@ -4028,10 +4031,10 @@ Elm.Main.make = function (_elm) {
                 _L.fromArray([]),
                 _L.fromArray([$Html.text("Welcome to this Website!")]))]))]));
    var container = A2($Router$Renderers.renderTopLevel,
-   function (v) {
+   function (outlet) {
       return A2($Html.div,
       _L.fromArray([$Html$Attributes.$class("container")]),
-      _L.fromArray([header,v]));
+      _L.fromArray([header,outlet]));
    },
    _L.fromArray([A2($Router$Renderers._op["<~"],
                 $Routes.indexRoute,
@@ -4047,10 +4050,30 @@ Elm.Main.make = function (_elm) {
                 ,A2($Router$Renderers._op["<~"],
                 $Routes.colophonRoute,
                 $Screens$Colophon.view)]));
-   var main = A2($Signal.map,
-   A2($Html.toElement,1000,1000),
-   container);
+   var routes = _L.fromArray([{ctor: "_Tuple2"
+                              ,_0: "/"
+                              ,_1: $Router$Types.Handler("index")}
+                             ,{ctor: "_Tuple2"
+                              ,_0: "/about"
+                              ,_1: $Router$Types.Handler("about")}
+                             ,{ctor: "_Tuple2"
+                              ,_0: "/colophon"
+                              ,_1: $Router$Types.Handler("colophon")}
+                             ,{ctor: "_Tuple2"
+                              ,_0: "/posts"
+                              ,_1: $Router$Types.NestedHandler(_L.fromArray([{ctor: "_Tuple2"
+                                                                             ,_0: "/"
+                                                                             ,_1: $Router$Types.Handler("postsIndex")}
+                                                                            ,{ctor: "_Tuple2"
+                                                                             ,_0: "/:id"
+                                                                             ,_1: $Router$Types.Handler("postsShow")}]))}]);
+   var main = $Signal.map(A2($Html.toElement,
+   1000,
+   1000))(A2($Router.embedRouter,
+   container,
+   routes));
    _elm.Main.values = {_op: _op
+                      ,routes: routes
                       ,main: main
                       ,container: container
                       ,header: header};
@@ -7081,6 +7104,9 @@ Elm.Native.Router.make = function(elm) {
         mkRouter: function(id) {
           console.log("mkRouter");
           return id;
+        },
+        embed: function(routes) {
+          debugger;
         }
       };
 };
@@ -10724,11 +10750,13 @@ Elm.Router.make = function (_elm) {
    $moduleName = "Router",
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
    $Json$Encode = Elm.Json.Encode.make(_elm),
    $Native$Router = Elm.Native.Router.make(_elm),
    $Router$Types = Elm.Router.Types.make(_elm),
    $Router$Watchers = Elm.Router.Watchers.make(_elm),
    $Signal = Elm.Signal.make(_elm);
+   var embedRouter = $Native$Router.embed;
    var onRouteM = function (handler) {
       return A3($Signal.keepIf,
       function (_v0) {
@@ -10740,7 +10768,7 @@ Elm.Router.make = function (_elm) {
                  _v0._0),
                  handler);}
             _U.badCase($moduleName,
-            "on line 19, column 46 to 83");
+            "on line 21, column 46 to 83");
          }();
       },
       {ctor: "_Tuple2"
@@ -10760,7 +10788,8 @@ Elm.Router.make = function (_elm) {
    _elm.Router.values = {_op: _op
                         ,mkRouter: mkRouter
                         ,onRoute: onRoute
-                        ,onRouteM: onRouteM};
+                        ,onRouteM: onRouteM
+                        ,embedRouter: embedRouter};
    return _elm.Router.values;
 };
 Elm.Router = Elm.Router || {};
@@ -10819,7 +10848,7 @@ Elm.Router.Renderers.make = function (_elm) {
                return _U.eq(_v0._0,
                  "") ? $Html.text("") : view(_v0._1);}
             _U.badCase($moduleName,
-            "on line 31, column 46 to 81");
+            "on line 33, column 46 to 81");
          }();
       },
       $Router.onRouteM(handler));
@@ -10853,7 +10882,7 @@ Elm.Router.Renderers.make = function (_elm) {
                  outletS)($Signal.mergeMany(_v4._1));
               }();}
          _U.badCase($moduleName,
-         "between lines 24 and 26");
+         "between lines 26 and 28");
       }();
    });
    _op["<@~"] = F2(function (children,
@@ -10867,6 +10896,12 @@ Elm.Router.Renderers.make = function (_elm) {
       return A2($Signal.map,
       parent,
       $Signal.mergeMany(children));
+   });
+   _op["<^~"] = F2(function (parent,
+   children) {
+      return A2(renderTopLevel,
+      parent,
+      children);
    });
    var render = F2(function (view,
    handler) {
@@ -10905,7 +10940,17 @@ Elm.Router.Types.make = function (_elm) {
    _P = _N.Ports.make(_elm),
    $moduleName = "Router.Types",
    $Json$Encode = Elm.Json.Encode.make(_elm);
-   _elm.Router.Types.values = {_op: _op};
+   var NestedHandler = function (a) {
+      return {ctor: "NestedHandler"
+             ,_0: a};
+   };
+   var Handler = function (a) {
+      return {ctor: "Handler"
+             ,_0: a};
+   };
+   _elm.Router.Types.values = {_op: _op
+                              ,Handler: Handler
+                              ,NestedHandler: NestedHandler};
    return _elm.Router.Types.values;
 };
 Elm.Router = Elm.Router || {};

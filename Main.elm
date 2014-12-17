@@ -18,15 +18,26 @@ import Screens.About as About
 import Screens.Posts as Posts
 import Screens.Colophon as Colophon
 
-import Router
+import Router (embedRouter)
 import Native.Router
 import Router.Renderers ((<~), (<@~), renderTopLevel)
 import Router.Helpers (linkTo)
+import Router.Types (RouteHandler'(..))
 
 -------- IMPLEMENTATION --------
 
+routes =
+  [ ("/", Handler "index")
+  , ("/about", Handler "about")
+  , ("/colophon", Handler "colophon")
+  , ("/posts", NestedHandler
+    [ ("/", Handler "postsIndex")
+    , ("/:id", Handler "postsShow")
+    ])
+  ]
+
 main : Signal.Signal Element
-main = Signal.map (Html.toElement 1000 1000) container
+main = Signal.map (Html.toElement 1000 1000) <| embedRouter container routes
 
 container : Signal Html.Html
 container =

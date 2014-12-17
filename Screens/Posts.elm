@@ -9,11 +9,11 @@ import Routes
 import Screens.Posts.Index as Index
 import Screens.Posts.Show as Show
 
-import Router.Renderers ((<~), (<#~))
+import Router.Renderers ((<~), (<#~), renderTopLevel)
 
-view outlet =
+view = (\outlet ->
   div [class "posts-outlet"]
-    [ h2 [] [text "Posts"], outlet ]
+    [ h2 [] [text "Posts"], outlet ])
 
 children = [ Routes.postsIndex <~ Index.view
            , Routes.postsShow  <#~ Show.view

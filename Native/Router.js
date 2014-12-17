@@ -101,6 +101,9 @@ Elm.Native.Router.make = function(elm) {
         mkRouter: function(id) {
           console.log("mkRouter");
           return id;
+        },
+        embed: function(routes) {
+          debugger;
         }
       };
 };
