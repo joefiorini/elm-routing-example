@@ -106,7 +106,7 @@ Elm.Native.Router.make = function(elm) {
         })(routes);
       }
 
-      function embedRoutes(container, routes) {
+      function embedRoutes(routes, container) {
         router.map(function(match) {
           setupRoutes(routes, match);
         });

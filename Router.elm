@@ -20,5 +20,8 @@ onRoute handler = Signal.keepIf ((==) handler) "" (Signal.subscribe routeChangeP
 onRouteM : HandlerName -> Signal HandlerNameM
 onRouteM handler = Signal.keepIf (\(h,_) -> (Debug.log "evaluating " h) == handler) ("",Json.null) (Signal.subscribe routeChangePM)
 
-embedRouter : Signal Html.Html -> List Route -> Signal Html.Html
-embedRouter = Native.Router.embed
+setup : List Route -> List (Signal Html.Html) -> Signal Html.Html
+setup routes handlers =
+  let handlers' = Native.Router.embed routes handlers
+  in
+     Signal.mergeMany handlers'

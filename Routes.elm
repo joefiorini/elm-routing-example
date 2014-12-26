@@ -6,4 +6,5 @@ colophonRoute = "colophon"
 postsRoute = "posts"
 postsIndex = "postsIndex"
 postsShow = "postsShow"
+contact = "contact"
 
