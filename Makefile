@@ -21,7 +21,7 @@ $(DIST)/%: %
 	mkdir -p $(DIST)
 	cp $< $@
 
-deploy: Main.elm $(addprefix $(DIST)/,$(DIST_FILES))
+deploy: Main.elm Main.css $(addprefix $(DIST)/,$(DIST_FILES))
 	git add .
 	git commit -m "Deploy :tada:"
 	git subtree push --prefix $(DIST) deploy master
