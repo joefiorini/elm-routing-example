@@ -25,3 +25,6 @@ setup routes handlers =
   let handlers' = Native.Router.embed routes handlers
   in
      Signal.mergeMany handlers'
+
+transitionTo : Signal HandlerName -> Signal HandlerName
+transitionTo = Native.Router.transitionTo

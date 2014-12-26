@@ -46,6 +46,7 @@ type alias AppState =
   }
 
 type Action = SubmitContact (Http.Request String)
+            | TransitionToRoute String
             | None
 
 type Update = ContactUpdate Contact.Update
@@ -54,30 +55,50 @@ type Update = ContactUpdate Contact.Update
 type alias Transition =
   { update : Update
   , state : AppState
-  , action : Action
+  , ajaxAction : Action
+  , routeAction : Action
   }
 
 transition =
   { update = NoOp
   , state = initialState
-  , action = None
+  , ajaxAction = None
+  , routeAction = None
   }
 
 main : Signal.Signal Element
 main = Signal.map2 container (Router.setup routes handlers) (processActions state)
 
-processActions : Signal Transition -> Signal Transition
-processActions transitionSignal =
-  let actionSignal = Signal.map (.action) transitionSignal
-      requestSignal = Signal.map (\a ->
+transitionActions : Signal Action -> Signal Transition -> Signal Transition
+transitionActions actionSignal transitionSignal =
+  let routeSignal = Signal.map (\a ->
+                      case a of
+                        TransitionToRoute s -> s
+                        _ -> "")
+  in
+     Signal.map2
+     (\a i -> i)
+      (Router.transitionTo (routeSignal actionSignal))
+      transitionSignal
+
+ajaxActions : Signal Action -> Signal Transition -> Signal Transition
+ajaxActions actionSignal transitionSignal =
+  let requestSignal = Signal.map (\a ->
                         case Debug.log "action" a of
                           SubmitContact r -> r
-                          None -> Http.request "" "" "" [])
+                          _ -> Http.request "" "" "" [])
   in
     Signal.map2
       (\r i -> Debug.log "complete" i)
       (Http.send (requestSignal actionSignal))
       transitionSignal
+
+processActions : Signal Transition -> Signal Transition
+processActions transitionSignal =
+  let actionSignal f = Signal.map f transitionSignal
+  in
+    Signal.mergeMany [ ajaxActions (actionSignal .ajaxAction) transitionSignal
+                     , transitionActions (actionSignal .routeAction) transitionSignal]
 
 updates : Signal.Channel Update
 updates = Signal.channel NoOp
@@ -100,8 +121,9 @@ process update {state} =
           { transition | state <- state' }
       (ContactUpdate submitForm) ->
         let action = SubmitContact <| Contact.submitRequest currentContact
+            routeAction = TransitionToRoute "index"
         in
-           { transition | state <- state, action <- action }
+           { transition | state <- state, ajaxAction <- action, routeAction <- routeAction }
 
 initialState =
   { contact = Nothing

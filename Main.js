@@ -4183,7 +4183,8 @@ Elm.Main.make = function (_elm) {
    var initialState = {_: {}
                       ,contact: $Maybe.Nothing};
    var submitForm = $Screens$Contact.SubmitForm;
-   var processActions = function (transitionSignal) {
+   var ajaxActions = F2(function (actionSignal,
+   transitionSignal) {
       return function () {
          var requestSignal = $Signal.map(function (a) {
             return function () {
@@ -4191,23 +4192,15 @@ Elm.Main.make = function (_elm) {
                "action",
                a);
                switch (_v0.ctor)
-               {case "None":
-                  return A4($Http.request,
-                    "",
-                    "",
-                    "",
-                    _L.fromArray([]));
-                  case "SubmitContact":
+               {case "SubmitContact":
                   return _v0._0;}
-               _U.badCase($moduleName,
-               "between lines 73 and 75");
+               return A4($Http.request,
+               "",
+               "",
+               "",
+               _L.fromArray([]));
             }();
          });
-         var actionSignal = A2($Signal.map,
-         function (_) {
-            return _.action;
-         },
-         transitionSignal);
          return A3($Signal.map2,
          F2(function (r,i) {
             return A2($Debug.log,
@@ -4217,12 +4210,52 @@ Elm.Main.make = function (_elm) {
          $Http.send(requestSignal(actionSignal)),
          transitionSignal);
       }();
+   });
+   var transitionActions = F2(function (actionSignal,
+   transitionSignal) {
+      return function () {
+         var routeSignal = $Signal.map(function (a) {
+            return function () {
+               switch (a.ctor)
+               {case "TransitionToRoute":
+                  return a._0;}
+               return "";
+            }();
+         });
+         return A3($Signal.map2,
+         F2(function (a,i) {
+            return i;
+         }),
+         $Router.transitionTo(routeSignal(actionSignal)),
+         transitionSignal);
+      }();
+   });
+   var processActions = function (transitionSignal) {
+      return function () {
+         var actionSignal = function (f) {
+            return A2($Signal.map,
+            f,
+            transitionSignal);
+         };
+         return $Signal.mergeMany(_L.fromArray([A2(ajaxActions,
+                                               actionSignal(function (_) {
+                                                  return _.ajaxAction;
+                                               }),
+                                               transitionSignal)
+                                               ,A2(transitionActions,
+                                               actionSignal(function (_) {
+                                                  return _.routeAction;
+                                               }),
+                                               transitionSignal)]));
+      }();
    };
-   var Transition = F3(function (a,
+   var Transition = F4(function (a,
    b,
-   c) {
+   c,
+   d) {
       return {_: {}
-             ,action: c
+             ,ajaxAction: c
+             ,routeAction: d
              ,state: b
              ,update: a};
    });
@@ -4259,21 +4292,26 @@ Elm.Main.make = function (_elm) {
    }();
    var None = {ctor: "None"};
    var transition = {_: {}
-                    ,action: None
+                    ,ajaxAction: None
+                    ,routeAction: None
                     ,state: initialState
                     ,update: NoOp};
    var userInput = $Signal.channel(transition);
+   var TransitionToRoute = function (a) {
+      return {ctor: "TransitionToRoute"
+             ,_0: a};
+   };
    var SubmitContact = function (a) {
       return {ctor: "SubmitContact"
              ,_0: a};
    };
    var process = F2(function (update,
-   _v2) {
+   _v4) {
       return function () {
          return function () {
             var currentContact = A2($Maybe.withDefault,
             $Screens$Contact.initialState,
-            _v2.state.contact);
+            _v4.state.contact);
             return $Debug.log("app state")(function () {
                switch (update.ctor)
                {case "ContactUpdate":
@@ -4285,24 +4323,26 @@ Elm.Main.make = function (_elm) {
                             update._0._1);
                             var state$ = _U.replace([["contact"
                                                      ,$Maybe.Just(updateField(currentContact))]],
-                            _v2.state);
+                            _v4.state);
                             return _U.replace([["state"
                                                ,state$]],
                             transition);
                          }();}
                     return function () {
+                       var routeAction = TransitionToRoute("index");
                        var action = SubmitContact($Screens$Contact.submitRequest(currentContact));
                        return _U.replace([["state"
-                                          ,_v2.state]
-                                         ,["action",action]],
+                                          ,_v4.state]
+                                         ,["ajaxAction",action]
+                                         ,["routeAction",routeAction]],
                        transition);
                     }();
                   case "NoOp":
                   return _U.replace([["state"
-                                     ,_v2.state]],
+                                     ,_v4.state]],
                     transition);}
                _U.badCase($moduleName,
-               "between lines 94 and 104");
+               "between lines 115 and 126");
             }());
          }();
       }();
@@ -4346,12 +4386,15 @@ Elm.Main.make = function (_elm) {
                       ,routes: routes
                       ,AppState: AppState
                       ,SubmitContact: SubmitContact
+                      ,TransitionToRoute: TransitionToRoute
                       ,None: None
                       ,ContactUpdate: ContactUpdate
                       ,NoOp: NoOp
                       ,Transition: Transition
                       ,transition: transition
                       ,main: main
+                      ,transitionActions: transitionActions
+                      ,ajaxActions: ajaxActions
                       ,processActions: processActions
                       ,updates: updates
                       ,userInput: userInput
@@ -7362,6 +7405,7 @@ Elm.Native.Router.make = function(elm) {
     var elmRouter = Elm.Router.Watchers.make(elm);
     var Utils = Elm.Native.Utils.make(elm);
     var List = Elm.Native.List.make(elm);
+    var Signal = Elm.Signal.make(elm);
 
   console.log('making router');
       var router = new Router();
@@ -7377,6 +7421,8 @@ Elm.Native.Router.make = function(elm) {
           });
         }
       };
+
+      router.updateURL = api.updateURL;
 
       router = router;
 
@@ -7466,12 +7512,34 @@ Elm.Native.Router.make = function(elm) {
         return container;
       }
 
+      function transitionToWrapper(completeS) {
+        return function(handlerName) {
+          if(handlerName) {
+            router.transitionTo(handlerName).then(function() {
+              elm.notify(completeS.id, handlerName);
+            }).catch(function(e) {
+              console.log("Could not transition to handler", handlerName);
+              console.error(e);
+            });;
+          }
+          return handlerName;
+        }
+      }
+
+      function transitionTo(handlerS) {
+        var complete = Signal.constant(handlerS);
+        var sender = A2(Signal.map, transitionToWrapper(complete), handlerS);
+        var f = function(x) { return function(y) { return x; } }
+        return A3(Signal.map2, f, complete, sender);
+      }
+
       return elm.Native.Router.values = {
         mkRouter: function(id) {
           console.log("mkRouter");
           return id;
         },
-        embed: F2(embedRoutes)
+        embed: F2(embedRoutes),
+        transitionTo: transitionTo
       };
 };
 
@@ -11120,6 +11188,7 @@ Elm.Router.make = function (_elm) {
    $Router$Types = Elm.Router.Types.make(_elm),
    $Router$Watchers = Elm.Router.Watchers.make(_elm),
    $Signal = Elm.Signal.make(_elm);
+   var transitionTo = $Native$Router.transitionTo;
    var setup = F2(function (routes,
    handlers) {
       return function () {
@@ -11161,7 +11230,8 @@ Elm.Router.make = function (_elm) {
                         ,mkRouter: mkRouter
                         ,onRoute: onRoute
                         ,onRouteM: onRouteM
-                        ,setup: setup};
+                        ,setup: setup
+                        ,transitionTo: transitionTo};
    return _elm.Router.values;
 };
 Elm.Router = Elm.Router || {};

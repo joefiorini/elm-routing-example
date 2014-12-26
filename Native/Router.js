@@ -9,6 +9,7 @@ Elm.Native.Router.make = function(elm) {
     var elmRouter = Elm.Router.Watchers.make(elm);
     var Utils = Elm.Native.Utils.make(elm);
     var List = Elm.Native.List.make(elm);
+    var Signal = Elm.Signal.make(elm);
 
   console.log('making router');
       var router = new Router();
@@ -24,6 +25,8 @@ Elm.Native.Router.make = function(elm) {
           });
         }
       };
+
+      router.updateURL = api.updateURL;
 
       router = router;
 
@@ -113,11 +116,33 @@ Elm.Native.Router.make = function(elm) {
         return container;
       }
 
+      function transitionToWrapper(completeS) {
+        return function(handlerName) {
+          if(handlerName) {
+            router.transitionTo(handlerName).then(function() {
+              elm.notify(completeS.id, handlerName);
+            }).catch(function(e) {
+              console.log("Could not transition to handler", handlerName);
+              console.error(e);
+            });;
+          }
+          return handlerName;
+        }
+      }
+
+      function transitionTo(handlerS) {
+        var complete = Signal.constant(handlerS);
+        var sender = A2(Signal.map, transitionToWrapper(complete), handlerS);
+        var f = function(x) { return function(y) { return x; } }
+        return A3(Signal.map2, f, complete, sender);
+      }
+
       return elm.Native.Router.values = {
         mkRouter: function(id) {
           console.log("mkRouter");
           return id;
         },
-        embed: F2(embedRoutes)
+        embed: F2(embedRoutes),
+        transitionTo: transitionTo
       };
 };
