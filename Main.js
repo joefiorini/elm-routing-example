@@ -4130,14 +4130,22 @@ Elm.Main.make = function (_elm) {
    var header = A3($Html.node,
    "header",
    _L.fromArray([]),
+   _L.fromArray([A2($Html.nav,
+   _L.fromArray([$Html$Attributes.$class("top-bar")]),
    _L.fromArray([A2($Html.ul,
-                _L.fromArray([]),
+                _L.fromArray([$Html$Attributes.$class("title-area")]),
                 _L.fromArray([A2($Html.li,
-                             _L.fromArray([]),
-                             _L.fromArray([A2($Router$Helpers.linkTo,
-                             "Home",
-                             "/")]))
-                             ,A2($Html.li,
+                _L.fromArray([$Html$Attributes.$class("name")]),
+                _L.fromArray([A2($Html.h1,
+                _L.fromArray([]),
+                _L.fromArray([A2($Router$Helpers.linkTo,
+                "Elm Router",
+                "/")]))]))]))
+                ,A2($Html.section,
+                _L.fromArray([$Html$Attributes.$class("top-bar-section")]),
+                _L.fromArray([A2($Html.ul,
+                _L.fromArray([$Html$Attributes.$class("left")]),
+                _L.fromArray([A2($Html.li,
                              _L.fromArray([]),
                              _L.fromArray([A2($Router$Helpers.linkTo,
                              "Posts",
@@ -4156,12 +4164,7 @@ Elm.Main.make = function (_elm) {
                              _L.fromArray([]),
                              _L.fromArray([A2($Router$Helpers.linkTo,
                              "Colophon",
-                             "/colophon")]))]))
-                ,A2($Html.div,
-                _L.fromArray([]),
-                _L.fromArray([A2($Html.h1,
-                _L.fromArray([]),
-                _L.fromArray([$Html.text("Welcome to this Website!")]))]))]));
+                             "/colophon")]))]))]))]))]));
    var container = F2(function (outlet,
    transition) {
       return A3($Html.toElement,
@@ -4169,7 +4172,13 @@ Elm.Main.make = function (_elm) {
       900,
       A2($Html.div,
       _L.fromArray([$Html$Attributes.$class("container")]),
-      _L.fromArray([header,outlet])));
+      _L.fromArray([header
+                   ,A2($Html.main$,
+                   _L.fromArray([]),
+                   _L.fromArray([A2($Html.h1,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text("An Example of Routing in Elm")]))
+                                ,outlet]))])));
    });
    var initialState = {_: {}
                       ,contact: $Maybe.Nothing};

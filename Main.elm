@@ -1,5 +1,5 @@
 import Html
-import Html (div, p, text, ul, a, li, h1, h2)
+import Html (div, p, text, ul, a, li, h1, h2, nav, section, main')
 import Html.Attributes (href, class)
 import Html.Events (onClick)
 import List ((::))
@@ -118,7 +118,10 @@ container outlet transition =
   Html.toElement 900 900
     (div [class "container"]
       [ header
-      , outlet
+      , main' []
+        [ h1 [] [text "An Example of Routing in Elm"]
+        , outlet
+        ]
       ])
 
 handlers =
@@ -134,14 +137,21 @@ handlers =
 header : Html.Html
 header =
   Html.node "header" []
-  [ ul []
-    [ li [] [ linkTo "Home" "/" ]
-    , li [] [ linkTo "Posts" "/posts" ]
-    , li [] [ linkTo "About" "/about" ]
-    , li [] [ linkTo "Contact" "/contact" ]
-    , li [] [ linkTo "Colophon" "/colophon" ]
-    ]
-  , div []
-    [ h1 [] [text "Welcome to this Website!"]
+  [ nav
+    [ class "top-bar" ]
+    [ ul [ class "title-area" ]
+      [ li [ class "name" ]
+          [ h1 []
+            [ linkTo "Elm Router" "/" ]
+          ]
+      ]
+    , section [ class "top-bar-section" ]
+      [ ul [ class "left" ]
+        [ li [] [ linkTo "Posts" "/posts" ]
+        , li [] [ linkTo "About" "/about" ]
+        , li [] [ linkTo "Contact" "/contact" ]
+        , li [] [ linkTo "Colophon" "/colophon" ]
+        ]
+      ]
     ]
   ]

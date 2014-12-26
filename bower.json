@@ -1,0 +1,23 @@
+{
+  "name": "route-spike",
+  "version": "0.0.0",
+  "homepage": "https://github.com/joefiorini/elm-routing-example",
+  "authors": [
+    "Joe Fiorini <joe@joefiorini.com>"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "foundation": "~5.5.0"
+  }
+}

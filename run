@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ls **/*.scss | entr -dr make Main.css &
+ls {*.elm,**/*.elm} | entr -dr make Main.js
